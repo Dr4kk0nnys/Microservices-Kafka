@@ -6,9 +6,11 @@ import { Kafka } from 'kafkajs'
 
 const kafka = new Kafka({
     clientId: 'api',
-    brokers: ['kafka:9092']
+    brokers: ['localhost:9092']
 });
+
 const producer = kafka.producer();
+
 
 /* Note: Middleware of producer to all routes */
 app.use((req, res, next) => {
@@ -17,9 +19,26 @@ app.use((req, res, next) => {
     return next();
 });
 
+app.post('/generate-certificate', async (req, res) => {
+
+    const message = {
+        user: { id: 1, name: 'Dr4kk0nnys' },
+        course: 'Kafka & Node.JS',
+        grade: 10
+    }
+
+    /* TODO: Call microservice */
+    await req['producer'].send({
+        topic: 'issue-certificate',
+        messages: [{ value: JSON.stringify(message) }]
+    });
+
+    return res.status(200).send({ ok: true });
+});
+
 const run = async () => {
 
-    // await producer.connect();
+    await producer.connect();
 
     app.listen(3000, () => console.log('Running on port 3000'));
 }
@@ -29,14 +48,3 @@ try {
 } catch (e) {
     console.error(e);
 }
-
-app.post('/generate-certificate', async (req, res) => {
-
-    /*
-        * TODO: Call microservice
-    */
-
-    console.log(req['producer']);
-
-    return res.status(200).send({ ok: true });
-});
